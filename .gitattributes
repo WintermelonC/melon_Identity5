@@ -1,0 +1,55 @@
+# ── 统一行尾，避免跨平台 diff 噪音 ──
+* text=auto eol=lf
+
+*.uasset filter=lfs diff=lfs merge=lfs -text
+*.umap filter=lfs diff=lfs merge=lfs -text
+*.ubulk filter=lfs diff=lfs merge=lfs -text
+*.uexp filter=lfs diff=lfs merge=lfs -text
+*.upk filter=lfs diff=lfs merge=lfs -text
+*.udk filter=lfs diff=lfs merge=lfs -text
+*.fbx filter=lfs diff=lfs merge=lfs -text
+*.obj filter=lfs diff=lfs merge=lfs -text
+*.blend filter=lfs diff=lfs merge=lfs -text
+*.png filter=lfs diff=lfs merge=lfs -text
+*.jpg filter=lfs diff=lfs merge=lfs -text
+*.jpeg filter=lfs diff=lfs merge=lfs -text
+*.tga filter=lfs diff=lfs merge=lfs -text
+*.exr filter=lfs diff=lfs merge=lfs -text
+*.hdr filter=lfs diff=lfs merge=lfs -text
+*.tif filter=lfs diff=lfs merge=lfs -text
+*.tiff filter=lfs diff=lfs merge=lfs -text
+*.psd filter=lfs diff=lfs merge=lfs -text
+*.wav filter=lfs diff=lfs merge=lfs -text
+*.mp3 filter=lfs diff=lfs merge=lfs -text
+*.ogg filter=lfs diff=lfs merge=lfs -text
+*.flac filter=lfs diff=lfs merge=lfs -text
+*.ttf filter=lfs diff=lfs merge=lfs -text
+*.otf filter=lfs diff=lfs merge=lfs -text
+*.mp4 filter=lfs diff=lfs merge=lfs -text
+*.mov filter=lfs diff=lfs merge=lfs -text
+*.bmp filter=lfs diff=lfs merge=lfs -text
+*.dds filter=lfs diff=lfs merge=lfs -text
+*.abc filter=lfs diff=lfs merge=lfs -text
+*.gltf filter=lfs diff=lfs merge=lfs -text
+*.glb filter=lfs diff=lfs merge=lfs -text
+*.usd filter=lfs diff=lfs merge=lfs -text
+*.vox filter=lfs diff=lfs merge=lfs -text
+*.rig filter=lfs diff=lfs merge=lfs -text
+
+# ── C++ / C# / 脚本仍按各自平台处理 ──
+*.cs   text eol=crlf
+*.bat  text eol=crlf
+*.ps1  text eol=crlf
+*.sln  text eol=crlf
+*.vcxproj text eol=crlf
+
+# ── 纯二进制且不走 LFS 的文件（明确标记，避免 Git 尝试 diff）──
+*.dll  binary
+*.exe  binary
+*.lib  binary
+*.pdb  binary
+*.so   binary
+*.dylib binary
+*.pak  binary
+*.ucas binary
+*.utoc binary

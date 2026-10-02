@@ -1,0 +1,57 @@
+﻿# ══════════════════════════════════════════════════════════════
+# Identity5 / Unreal Engine 5.8  ——  只提交"源"，不提交"产物"
+# 判断标准：换一台机器能否自动重新生成？能 → 忽略
+# ══════════════════════════════════════════════════════════════
+
+# ── 1. 编译产物（换机可重编，且与机器/引擎版本绑定）──
+/Binaries/
+/Build/
+/Intermediate/
+/DerivedDataCache/
+/Saved/
+*.VC.db
+*.opensdf
+*.sdf
+
+# ── 2. IDE 与解决方案（UBT 会自动重新生成）──
+/.vs/
+/.vscode/
+/.idea/
+*.sln
+*.slnx
+*.suo
+*.VC.opendb
+*.xcodeproj/
+*.xcworkspace/
+.vsconfig
+
+# ── 3. 第三方/预编译插件的二进制（RiderLink 会随引擎重新编译）──
+/Plugins/Developer/RiderLink/Binaries/
+/Plugins/Developer/RiderLink/Intermediate/
+# 若将来引入任何"只有二进制"的插件，按同样方式逐条列出，
+# 不要用通配 /Plugins/**/Binaries/，那会连带忽略你自己插件的产物规则说明
+
+# ── 4. 编辑器临时/派生资产目录 ──
+/Content/Collections/
+/Content/Developers/
+/Content/__ExternalActors__/
+/Content/__ExternalObjects__/
+
+# ── 5. C++ 中间文件碎片 ──
+*.cpp.hash
+*.tmp
+*.temp
+*.log
+*.cache
+
+# ── 6. 操作系统噪音 ──
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# ── 7. 大体积原始资产（如果你把美术源文件放进工程）──
+# 建议把美术源文件（PSD/Blender 工程）放在工程外的资源库，
+# 只有导出的 fbx/png 进工程。若确实要放进来，取消下面注释：
+# /RawArt/
