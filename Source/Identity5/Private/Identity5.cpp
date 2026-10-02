@@ -1,7 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Identity5.h"
-#include "Identity5Log.h"
+#include "Logging/Identity5Log.h"
 #include "Modules/ModuleManager.h"
 
 /**
