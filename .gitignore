@@ -28,8 +28,8 @@
 # ── 3. 第三方/预编译插件的二进制（RiderLink 会随引擎重新编译）──
 /Plugins/Developer/RiderLink/Binaries/
 /Plugins/Developer/RiderLink/Intermediate/
-# 若将来引入任何"只有二进制"的插件，按同样方式逐条列出，
-# 不要用通配 /Plugins/**/Binaries/，那会连带忽略你自己插件的产物规则说明
+/Plugins/GameFeatures/*/Binaries/
+/Plugins/GameFeatures/*/Intermediate/
 
 # ── 4. 编辑器临时/派生资产目录 ──
 /Content/Collections/

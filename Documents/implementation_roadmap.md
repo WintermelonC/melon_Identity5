@@ -158,27 +158,30 @@
 - 关键认知：UE 默认日志刷屏严重，**自定义 LogCategory 是定位问题的唯一高效手段**。
 
 📁 **要建/改的文件**：
-- `Source/Identity5/Identity5.h` / `.cpp`（模块入口，声明 `LogIdentity5`、`LogIDFNet`、`LogIDFAbility`、`LogIDFInteraction`）
-- 建议后续每个插件也有自己的日志类别（`IDFCore.h` / `IDMMatch.h`）
+- `Source/Identity5/Public/Logging/Identity5Log.h` / `Private/Logging/Identity5Log.cpp`（主模块只放 `LogIdentity5`）
+- 系统类日志归各自插件：`Plugins/GameFeatures/IDFCore/Source/IDFCore/Public/Logging/IDFCoreLog.h`（S05 建）、`.../IDMMatch/.../Logging/IDMMatchLog.h`（S10 建）
 
 ✍️ **你要写的逻辑**：
-1. 用 `DECLARE_LOG_CATEGORY_EXTERN(LogIDFInteraction, Log, All)` 声明，`.cpp` 里用 `DEFINE_LOG_CATEGORY` 定义；
-2. 写一个控制台命令 `IDF.Debug.Hello 1`（用 `FAutoConsoleCommand`），验证命令系统可用；
-3. 在 `DefaultEngine.ini` 里设置默认日志级别：
+1. 主模块只声明/定义 `LogIdentity5`（`DECLARE_LOG_CATEGORY_EXTERN` + `DEFINE_LOG_CATEGORY` 配对）；
+2. 其余系统类日志（`LogIDFNet` / `LogIDFAbility` / `LogIDFAttribute` / `LogIDFInteraction`）**在 S05 建 `IDFCore` 时直接建在插件里**，不要先建在主模块再迁；
+3. 写一个控制台命令 `IDF.Debug.Hello 1`（用 `FAutoConsoleCommand`），验证命令系统可用；
+4. 在 `DefaultEngine.ini` 里设置默认日志级别（**类名不变，与定义位置无关**）：
    ```ini
    [Core.Log]
+   LogIdentity5=Log
    LogIDFInteraction=Verbose
    LogIDFNet=Log
    ```
 
 ⚠️ **常见坑**：
-- 日志类别名重复定义会链接失败；
-- `Verbose` 级别在 Shipping 会被裁掉，开发期用 `Log`/`Warning` 更稳；
+- 日志类别名重复定义会链接失败（`duplicate symbol`）；声明在头、定义只能一处；
+- 日志类别写进插件后，插件不要再反向依赖主模块取类别（会破坏 S20 的解耦验收）；
+- `CompileTimeVerbosity` 写小会把 `Verbose` 日志从二进制里删掉，之后 ini 怎么调都看不到；
 - 控制台命令的参数解析：`FAutoConsoleCommandWithWorldAndArgs` 比手写解析省事。
 
-✅ **自测**：游戏里按 `~` 输入 `IDF.Debug.Hello 1`，屏幕出现文字；日志文件里能看到 `LogIDFInteraction` 的输出。
+✅ **自测**：游戏里按 `~` 输入 `IDF.Debug.Hello 1`，屏幕出现文字；日志文件里能看到 `LogIdentity5` 的输出。
 
-💼 **简历点**："建立模块化日志与运行时调试开关（含 GameplayDebugger 自定义分类）"。
+💼 **简历点**："按归属模块划分日志类别（平台类归主模块、系统类归所属插件），区分运行时级别与编译期上限，并提供运行时调试开关"。
 
 ---
 
@@ -188,42 +191,75 @@
 
 ### S05 ✅ 最小 GAS 骨架：ASC 自定义类 + 属性集
 
-🎯 **目标**：有一个自己的 `UIDFAbilitySystemComponent`，和一个能复制的 `UIDFHealthSet`，编译通过。
+> 📄 **详细实施步骤见 [steps/S05-gas-skeleton.md](steps/S05-gas-skeleton.md)**（含 Meta 属性不复制的原因、`REPNOTIFY_Always` 的必要性、UE5.8 与教程不一致的 3 处 API、客户端属性为 0 的排查表）。
+
+🎯 **目标**：**先新建 `IDFCore` GameFeature 插件**，然后在插件里实现 `UIDFAbilitySystemComponent` 与 `UIDFHealthSet`，编译通过、属性在客户端能正确复制。
+
+> ⚠️ **S05 起 `IDFCore` 插件就必须存在**（原计划把它放在 S10，已修正）。原因：GAS 骨架是"GAS 胶水"，按设计文档第 2 轮 2.1 节属于 `IDFCore`；而 C++ 类**跨模块搬迁不是移动文件**——S06 一旦创建引用这些类的资产（`DA_*`/`GE_*`/蓝图父类），跨模块搬迁会导致资产断链、需要逐个人工重定向。**S05 是零代价窗口（只有 4 个源文件、零资产引用）**。
 
 📚 **要学会的概念**（**必须读官方文档**）：
-- 搜：`Gameplay Ability System Unreal`、`AbilitySystemComponent`、`AttributeSet`、`ATTRIBUTE_ACCESSORS`、`GetLifetimeReplicatedProps`、`GAMEPLAYATTRIBUTE_REPNOTIFY`
+- 搜：`Gameplay Ability System Unreal`、`AbilitySystemComponent`、`AttributeSet`、`ATTRIBUTE_ACCESSORS_BASIC`、`GetLifetimeReplicatedProps`、`GAMEPLAYATTRIBUTE_REPNOTIFY`、`Game Feature Plugin`
 - 关键认知：
   - `UAttributeSet` 的属性要**手工写复制**（宏帮你做了大部分）；
-  - `ATTRIBUTE_ACCESSORS` 宏生成 `GetXxxAttribute()` / `SetXxxAttribute()` / `InitXxx()`，别手写；
-  - `PreAttributeChange`（Clamp 用）和 `PostGameplayEffectExecute`（结算用）职责不同。
+  - 生成访问器的宏在 5.8 里叫 **`ATTRIBUTE_ACCESSORS_BASIC`**（`ATTRIBUTE_ACCESSORS` 只存在于注释示例里）；
+  - `PreAttributeChange`（夹取用）和 `PostGameplayEffectExecute`（结算用）职责不同；
+  - **插件模块的导出宏是 `IDFCORE_API`**，不是主模块的 `IDENTITY5_API`。
 
-📁 **要建的文件**（在 `Plugins/GameFeatures/IDFCore/` 下）：
+📁 **要建的文件**（用编辑器的 **Add → Game Feature** 创建插件 `IDFCore`，**不要手写 `.uplugin`**）：
+
+向导会自动生成这些（**不需要你创建**，注意入口文件叫 `IDFCoreModule.*`，不存在 `IDFCore.h/.cpp`）：
 ```
-IDFCore.uplugin
-IDFCore.Build.cs
-Source/IDFCore/Public/IDFCore.h
-Source/IDFCore/Private/IDFCore.cpp
-Source/IDFCore/Public/AbilitySystem/IDFAbilitySystemComponent.h/.cpp
-Source/IDFCore/Public/AbilitySystem/IDFHealthSet.h/.cpp
-Source/IDFCore/Public/IDFCoreLog.h/.cpp        （日志类别）
+Plugins/GameFeatures/IDFCore/IDFCore.uplugin
+Plugins/GameFeatures/IDFCore/Content/IDFCore.uasset          （GameFeature 数据资产）
+Plugins/GameFeatures/IDFCore/Resources/Icon128.png
+Plugins/GameFeatures/IDFCore/Source/IDFCore/IDFCore.Build.cs
+Plugins/GameFeatures/IDFCore/Source/IDFCore/Public/IDFCoreModule.h
+Plugins/GameFeatures/IDFCore/Source/IDFCore/Private/IDFCoreModule.cpp
+```
+
+本节你要**新增**的（全部放在 `Source/IDFCore/` 的子目录里）：
+```
+Public/Logging/IDFCoreLog.h
+Private/Logging/IDFCoreLog.cpp
+Public/AbilitySystem/IDFAbilitySystemComponent.h
+Private/AbilitySystem/IDFAbilitySystemComponent.cpp
+Public/AbilitySystem/IDFHealthSet.h
+Private/AbilitySystem/IDFHealthSet.cpp
+Public/Debug/IDFGasTestActor.h
+Private/Debug/IDFGasTestActor.cpp
+```
+
+同时**修改**主模块的日志（类别迁走的连带改动，见详细文档 -1.6）：
+```
+Source/Identity5/Public/Logging/Identity5Log.h    （删掉 4 个类别声明，只留 LogIdentity5）
+Source/Identity5/Private/Logging/Identity5Log.cpp （同步删掉 4 个 DEFINE_LOG_CATEGORY）
 ```
 
 ✍️ **你要写的逻辑**：
-1. `IDFCore.Build.cs` 的依赖清单照 `design_analysis.md` 第 2 轮 2.2 节抄（**这一步可以完全照抄，因为它是配置不是逻辑**）；
+1. 先**核对**（不是重写）向导生成的 `IDFCore.Build.cs`：`GameplayAbilities` / `GameplayTags` / `GameplayTasks` 应在 `PublicDependencyModuleNames` 里；
 2. `UIDFHealthSet`：`Health`、`MaxHealth`、`Damage`(Meta)、`Healing`(Meta) 四个属性；
 3. `PreAttributeChange`：把 `Health` clamp 到 `[0, MaxHealth]`；
 4. `PostGameplayEffectExecute`：**注意 5.8 的签名是 `const FGameplayEffectModCallbackData&`**（我在引擎源码里核实过，网上大量教程写的是非 const 引用，是旧版本）；
 5. `UIDFAbilitySystemComponent`：先只加 `PrintDebugInfo()` 和日志，不急着写输入转发。
 
 ⚠️ **常见坑**：
+- **`IDENTITY5_API` 必须改成 `IDFCORE_API`**（类换模块了），否则链接报 `unresolved external symbol`；
+- 插件没写进 `.uproject` 的 `Plugins` 数组 → UBT 不编译它，症状是"代码像没生效"；
+- **`.uplugin` 的 `"Plugins"` 数组里只能写真实插件**（如 `GameplayAbilities`）；把引擎模块（如 `GameplayTags`）写进去会**直接构建失败**：`Unable to find plugin 'GameplayTags'`。模块依赖要写在 `Build.cs` 的 `DependencyModuleNames` 里；
+- **插件描述符里没有 `"Type"` 字段**：`"Type": "Runtime"` 是 `Modules[]` 里每个条目的**模块**类型，别误当成"插件类型"去改成 `"GameFeature"`（插件类型由位置推断，GameFeature 身份由 `Content/IDFCore.uasset` + `BuiltInInitialFeatureState` 决定）；
+- 插件的 `.uplugin` 里 `LoadingPhase` 用 `Default`，不要用 `PreDefault`（早于 Engine 反射注册，会"找不到类"）；
+- 新建/重命名插件后**必须重新生成工程文件**（右键 `.uproject` → Generate Visual Studio project files），否则 Rider/VS 不会索引插件代码；改过模块名后要清掉 `Plugins/GameFeatures/<插件>/Binaries` 与 `Intermediate` 再重编；
 - `FGameplayEffectModCallbackData` 在 5.8 里由 `GameplayEffectExtension.h` 提供（该文件现在只剩结构体定义，注释里写着 legacy），要 include 它；
-- 属性没复制：忘了在 `GetLifetimeReplicatedProps` 里加 `DOREPLIFETIME_CONDITION_NOTIFY`；
+- `PostGameplayEffectExecute` 的签名是 `const FGameplayEffectModCallbackData&`（漏 `const` 会报"未覆盖基类虚函数"）；
+- 生成访问器的宏是 **`ATTRIBUTE_ACCESSORS_BASIC`**，`ATTRIBUTE_ACCESSORS` 只存在于注释里；
+- 属性没复制：忘了在 `GetLifetimeReplicatedProps` 里加 `DOREPLIFETIME_CONDITION_NOTIFY` + `REPNOTIFY_Always`；
 - `GAMEPLAYATTRIBUTE_REPNOTIFY` 的参数顺序写错（是 `ClassName, PropertyName, OldValue`）；
-- **Meta 属性（Damage/Healing）不应复制**（它们只在服务器瞬间存在）——这是新手最常犯的带宽错误。
+- **Meta 属性（Damage/Healing）不应复制**（它们只在服务器瞬间存在）——这是新手最常犯的带宽错误；
+- 插件的 `Binaries/`/`Intermediate/` 需要单独 ignore（工程根 `/Binaries/` 是锚定规则，不匹配子目录）。
 
-✅ **自测**：编译通过；在编辑器里能通过 `Add Attribute Set` 或蓝图默认值看到属性；`GameplayInsights` 里能看到属性集注册。
+✅ **自测**：插件在插件面板显示"已启用"；编译通过；**用 Listen Server + 客户端验证属性在客户端也能读到 `100.0/100.0`**（这是本节最关键的一项，见详细文档的验证项 6）。
 
-💼 **简历点**："基于 GAS 实现自定义 AbilitySystemComponent 与 AttributeSet，区分持久属性与 Meta 属性，控制复制开销"。
+💼 **简历点**："用 GameFeature 插件划分框架层（IDFCore）与启动装配（主模块），保证依赖单向；基于 GAS 实现自定义 AbilitySystemComponent 与 AttributeSet，区分持久属性与 Meta 属性以控制复制开销"。
 
 ---
 
@@ -378,6 +414,8 @@ Source/IDMMatch/Public/Data/IDMMatchRuleSet.h/.cpp      （数据资产，先只
 > 这是本项目的**架构亮点**：把"板/窗/机/椅/门"统一抽象成一套交互协议。做好了，后面 7 种交互点就是"填表格"。
 
 ### S10 ✅ 交互契约：接口 + 数据结构
+
+> 注：`IDFCore` 插件在 S05 就已创建，本节是**往已有插件里加文件**（不再是"新建插件"）。新增文件用 `IDFCORE_API`。
 
 🎯 **目标**：`IIDFInteractableTarget` 接口与 `FIDFInteractionOption` / `FIDFInteractionRequest` 结构体编译通过。
 

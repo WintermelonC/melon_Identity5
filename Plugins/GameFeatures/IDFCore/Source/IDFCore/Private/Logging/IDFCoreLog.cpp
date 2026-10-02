@@ -1,0 +1,6 @@
+﻿#include "Logging/IDFCoreLog.h"
+
+DEFINE_LOG_CATEGORY(LogIDFNet);
+DEFINE_LOG_CATEGORY(LogIDFAbility);
+DEFINE_LOG_CATEGORY(LogIDFAttribute);
+DEFINE_LOG_CATEGORY(LogIDFInteraction);

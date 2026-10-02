@@ -144,6 +144,13 @@ IDFUI      ──▶ IDFCore + IDMMatch
 Identity5(主模块) ──▶ 全部（仅做装配，不被任何 Feature 依赖）
 ```
 
+> 📌 **勘误 / 补充（第 2 轮实施期确认）**：`IDFCore` 插件的**创建时机提前到 S05**（原计划 S10）。原因：GAS 骨架（自定义 ASC、AttributeSet、AbilitySet）就是本表所述的「GAS 胶水」，按本节归属 `IDFCore`；而 C++ 类**跨模块搬迁会产生资产断链**（S06 起 `DA_*`/`GE_*`/蓝图父类会引用这些类，跨模块移动后需要逐个人工重定向，并常留下 `REINST_` 孤儿类）。S05 时只有 4 个源文件、零资产引用，是零代价窗口。详见 `Documents/steps/S05-gas-skeleton.md` 第 -1 节。
+>
+> 连带影响：
+> 1. **主模块 `Identity5.Build.cs` 需要依赖 `IDFCore`**（用 `PrivateDependencyModuleNames`），这符合上图的单向依赖（主模块 ──▶ 全部插件，无插件依赖主模块）；
+> 2. 插件模块的导出宏是 **`IDFCORE_API`**，不是主模块的 `IDENTITY5_API`（写错会链接失败）；
+> 3. **日志类别归属**：`LogIDFNet` / `LogIDFAbility` / `LogIDFAttribute` / `LogIDFInteraction` 随 GAS 骨架迁入 `IDFCore/Public/Logging/IDFCoreLog.h`，主模块只保留 `LogIdentity5`；`LogIDFMatch` 待 S10 建 `IDMMatch` 时迁入。原则是「平台类日志归主模块，系统类日志归所属插件」（与引擎自身一致：`LogGameplayAbilities` 定义在 GAS 插件内）。
+
 ### 2.2 GameFeature 插件内部标准结构
 
 ```
@@ -1091,6 +1098,10 @@ Content/IDF/
 
 ### 2.2 模块划分与 Build.cs 依赖（本轮定稿）
 
+> 📌 **实施期修正（S05 落地后同步）**：**GAS 三件套（`GameplayAbilities` / `GameplayTags` / `GameplayTasks`）作为依赖应加在 `IDFCore` 插件上**，而不是主模块——因为 GAS 骨架（ASC / AttributeSet / AbilitySet）按 2.1 节归属 `IDFCore`。主模块只通过 **`PrivateDependencyModuleNames` 依赖 `IDFCore`**。下面的清单保留了主模块的 GAS 依赖（无害，将来主模块自己写 GAS 代码时用得上），但**必须同时有 `IDFCore` 依赖**。
+>
+> 另外统一一条目录约定：主模块的源文件按功能分子目录（`Public/` 与 `Private/` 对称）。**GameMode 相关的一律放 `GameMode/`**（不放 `GameFramework/`，避免与引擎自带的 `Engine/Source/Runtime/Engine/Classes/GameFramework/` 在阅读时混淆）。
+
 **主模块 `Source/Identity5/Identity5.Build.cs`**
 
 ```csharp
@@ -1098,7 +1109,7 @@ PublicDependencyModuleNames.AddRange(new string[] {
     "Core", "CoreUObject", "Engine", "InputCore",
     "EnhancedInput",
     "GameplayTags",            // 引擎内置模块：FGameplayTag / FNativeGameplayTag
-    "GameplayAbilities",       // GAS
+    "GameplayAbilities",       // GAS（主模块自己写 GAS 代码时用）
     "GameplayTasks",           // GAS 的依赖（能力任务）
     "ModularGameplay",         // UGameFrameworkComponentManager
     "GameFeatures",            // UGameFeaturesSubsystem

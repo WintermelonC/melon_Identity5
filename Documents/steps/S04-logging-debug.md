@@ -119,24 +119,24 @@ DEFINE_LOG_CATEGORY(LogIDFNet);                     // ← 定义，分配内存
  *  - DefaultVerbosity = Log   ：正常开发时只看关键节点
  *  - CompileTimeVerbosity = All：允许运行时通过 ini 把级别调到 Verbose 而不必重编译
  */
-DECLARE_LOG_CATEGORY_EXTERN(LogIdentity5,     Log, All);   // 主模块：生命周期、模块装配
-DECLARE_LOG_CATEGORY_EXTERN(LogIDFNet,        Log, All);   // 网络：复制、RPC、预测校正
-DECLARE_LOG_CATEGORY_EXTERN(LogIDFAbility,    Log, All);   // GAS：能力激活/失败、标签变化
-DECLARE_LOG_CATEGORY_EXTERN(LogIDFAttribute,  Log, All);   // GAS：属性变化与结算
-DECLARE_LOG_CATEGORY_EXTERN(LogIDFInteraction,Log, All);   // 交互：扫描、请求、服务器校验
-DECLARE_LOG_CATEGORY_EXTERN(LogIDFMatch,      Log, All);   // 对局：阶段、计数、胜负
-DECLARE_LOG_CATEGORY_EXTERN(LogIDFAI,         Log, All);   // AI：感知、黑板、行为树
-DECLARE_LOG_CATEGORY_EXTERN(LogIDFUI,         Log, All);   // UI：页面栈、ViewModel 绑定
+DECLARE_LOG_CATEGORY_EXTERN(LogIdentity5, Log, All);   // 主模块：生命周期、模块装配
 ```
 
-⚠️ **注意**：这个头文件放在主模块，但后续 `IDFCore` / `IDMMatch` 插件也需要日志类别。**两种做法**，你要选一种并保持一致：
+⚠️ **勘误（第 2 轮实施期修正）**：**日志类别按"归属模块"分开声明，不要全部堆在主模块。** 本节的初版把 8 个类别全放主模块，会导致插件为了打日志而反向依赖主模块，破坏 S20 的"禁用任一插件其余功能正常"验收。正确划分（原则：**平台类日志归主模块，系统类日志归所属插件**，与引擎一致——`LogGameplayAbilities` 就定义在 GAS 插件内）：
 
-| 做法 | 说明 | 适用 |
+| 类别 | 归属模块 | 何时建 |
 |---|---|---|
-| **A（本节采用）** | 所有类别集中在主模块的 `Identity5Log.h`，插件 `PublicDependencyModuleNames` 里加 `Identity5` | 类别少、想统一管理 |
-| B | 每个插件在自己的 `Public/` 下建 `IDFCoreLog.h` | 插件要能独立分发、不依赖主模块 |
+| `LogIdentity5` | 主模块（`Source/Identity5/Public/Logging/Identity5Log.h`） | 本节 |
+| `LogIDFNet` / `LogIDFAbility` / `LogIDFAttribute` / `LogIDFInteraction` | `IDFCore` 插件（`Plugins/GameFeatures/IDFCore/Source/IDFCore/Public/Logging/IDFCoreLog.h`） | **S05 建插件时**（见 `steps/S05-gas-skeleton.md` 第 -1.6 节） |
+| `LogIDFMatch` | `IDMMatch` 插件 | S10 |
+| `LogIDFAI` / `LogIDFUI` | 未来的 AI / UI 插件 | 对应里程碑 |
 
-**注意 A 的隐患**：插件依赖主模块会让"插件独立性"变差（S20 要做"禁用插件不影响其他功能"的验证）。所以我建议**长期按 B 走**，但本节先做 A（因为现在还没有插件），到 S10 建 `IDFCore` 时把 `LogIDFInteraction` 等类别迁到 `Plugins/GameFeatures/IDFCore/Public/IDFCoreLog.h`。
+**因此本节的落地方式是**：
+- 主模块的 `Identity5Log.h/.cpp` **只放 `LogIdentity5`**；
+- 其余类别在 S05 建 `IDFCore` 时**直接建在插件里**（不要主模块先建再迁）；
+- `Config/DefaultEngine.ini` 的 `[Core.Log]` 段**不受影响**——类别名没变，只是定义位置变了。
+
+> **本节自测可相应简化**：主模块只需验证 `LogIdentity5` 能输出；其余类别的验证放到 S05。
 
 📁 **同时新建** `Source/Identity5/Identity5Log.cpp`
 
@@ -146,14 +146,10 @@ DECLARE_LOG_CATEGORY_EXTERN(LogIDFUI,         Log, All);   // UI：页面栈、V
 // Identity5Log.cpp
 #include "Identity5Log.h"
 
+// 只定义主模块自己的类别。
+// 其余类别（LogIDFNet / LogIDFAbility / LogIDFAttribute / LogIDFInteraction）
+// 随 GAS 骨架一起定义在 IDFCore 插件的 IDFCoreLog.cpp 里（S05）。
 DEFINE_LOG_CATEGORY(LogIdentity5);
-DEFINE_LOG_CATEGORY(LogIDFNet);
-DEFINE_LOG_CATEGORY(LogIDFAbility);
-DEFINE_LOG_CATEGORY(LogIDFAttribute);
-DEFINE_LOG_CATEGORY(LogIDFInteraction);
-DEFINE_LOG_CATEGORY(LogIDFMatch);
-DEFINE_LOG_CATEGORY(LogIDFAI);
-DEFINE_LOG_CATEGORY(LogIDFUI);
 ```
 
 ✅ **自测**：编译通过。此时还没有任何 `UE_LOG` 使用它们，所以运行看不出区别——但链接器已经不再报 duplicate symbol（因为每个类别只定义了一次）。

@@ -1,0 +1,32 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "IDFCore",
+	"Description": "Identity5 核心框架层：交互抽象、GAS 胶水、角色基类、消息与复制组件",
+	"Category": "Game Features",
+	"CreatedBy": "WintermelonC",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"EnabledByDefault": false,
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "IDFCore",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	],
+	"ExplicitlyLoaded": false,
+	"BuiltInInitialFeatureState": "Active",
+	"Plugins": [
+		{ "Name": "GameplayAbilities", "Enabled": true },
+		{ "Name": "GameFeatures", "Enabled": true },
+		{ "Name": "ModularGameplay", "Enabled": true }
+	]
+}
