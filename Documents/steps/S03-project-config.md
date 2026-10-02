@@ -104,7 +104,7 @@ Source/Identity5/Identity5GameMode.cpp
  *    此时 GameFeature 插件尚未加载，因此不能直接指向 IDMMatch 插件里的对局 GameMode。
  *  - 所以入口指向主模块的这个类；真正的对局 GameMode 通过地图的 World Settings 覆盖指定。
  */
-UCLASS(Abstract, Config = Game)
+UCLASS(Config = Game)
 class IDENTITY5_API AIdentity5GameMode : public AGameModeBase
 {
     GENERATED_BODY()
@@ -133,8 +133,21 @@ AIdentity5GameMode::AIdentity5GameMode()
 | `GENERATED_BODY()` | 放在 `UCLASS` 内的第一行 |
 | `IDENTITY5_API` | 模块导出宏，等于 `模块名大写_API`。你的模块名是 `Identity5`，所以是 `IDENTITY5_API`。**漏了它会导致其他模块无法引用这个类** |
 
-❓ **`UCLASS(Abstract, Config=Game)` 里的 `Abstract` 是什么意思？**
-表示这个类**不能在编辑器里直接实例化**（不能做成蓝图类）。本轮加它是为了强制你走"地图 World Settings 覆盖"的路子；如果你希望能在编辑器里基于它建蓝图，把 `Abstract` 去掉。
+❓ **`UCLASS(Config = Game)` 里的 `Config` 是什么意思？**
+它让这个类里标记了 `UPROPERTY(Config)` 的成员可以被写进 `DefaultGame.ini`。现在类里没有这种成员，但将来配"默认规则集"时会用到，所以先留着。
+
+> ⚠️ **不要给这个类加 `Abstract`（我最初写错了，已修正）**：
+> `Abstract` 表示"这个类不能被实例化，只能被继承"。而 PIE 启动时**必须真正生成一个 GameMode actor**（它既是配置里的入口 GameMode，也是没有被地图 `World Settings` 覆盖时的兜底），所以加了 `Abstract` 会直接导致 PIE 失败：
+> ```
+> LogLoad:  Game class is 'Identity5GameMode'
+> LogSpawn: Warning: SpawnActor failed because class Identity5GameMode is abstract
+> LogWorld: Error: Failed to spawn GameMode actor.
+> ```
+> 紧接着**编辑器会弹出一个和根因毫无关系的对话框**：
+> ```
+> 编辑器预览场景创建失败。
+> ```
+> **这个弹窗是误导性的**——它是"PIE 会话初始化失败"的通用提示。以后遇到它，**第一件事是去 `Saved/Logs/Identity5.log` 里搜 `Failed to spawn`**，真正的原因就在它上面一两行。
 
 **编译**：关闭编辑器 → 在项目根目录用 S01 学到的 `Build.bat` 命令编译 → 打开编辑器。
 
@@ -324,6 +337,9 @@ net.UseAdaptiveNetUpdateFrequency
 | 编辑器里改了设置，`git diff` 一片红 | 编辑器重写了整个段 | 用 `git diff` 逐段看，把无关变化手动还原（或干脆只用手改 ini） |
 | 保存 ini 后编辑器没反应 | 大部分 ini 需要**重启编辑器**才生效；少数（如 `[SystemSettings]` 的 cvar 默认值）需要重启 | 重启编辑器再验证 |
 | `ProjectName` 改了窗口标题没变 | 标题里还带着配置名与位数 | UE 的标题格式是 `ProjectName [Configuration] (Bitness) Editor`，确认看的是项目名部分 |
+| **PIE 弹窗"编辑器预览场景创建失败"** | **这个文案是误导性的**，它只是"PIE 会话初始化失败"的通用提示。真正的原因在日志里它上面一两行 | 打开 `Saved/Logs/Identity5.log` 搜 `Failed to spawn`。本项目实测到的根因是：`LogSpawn: Warning: SpawnActor failed because class Identity5GameMode is abstract` → GameMode 被声明成了 `Abstract`，PIE 无法实例化它。去掉 `UCLASS` 里的 `Abstract` 重新编译即可 |
+| 日志报 `Asset manager settings do not include a rule for assets of type GameFeatureData` | 启用 Game Features 插件后，资产管理器需要一条 `GameFeatureData` 的扫描规则 | 引擎弹窗问"是否添加"时选**是**；或手动在 `DefaultGame.ini` 的 `[/Script/Engine.AssetManagerSettings]` 段加 `+PrimaryAssetTypesToScan=(PrimaryAssetType="GameFeatureData",AssetBaseClass=/Script/GameFeatures.GameFeatureData,bHasBlueprintClasses=False,bIsEditorOnly=False,Directories=((Path="/Game")),Rules=(Priority=-1))` |
+| 日志报 `Using CommonUI without a CommonGameViewportClient derived game viewport client` | 启用了 CommonUI 插件，但还没建自定义 `GameViewportClient`（S24 才建） | 暂时忽略；嫌刷屏就在 `DefaultEngine.ini` 的 `[SystemSettings]` 加 `CommonUI.Debug.CheckGameViewportClientValid=0` |
 
 ---
 

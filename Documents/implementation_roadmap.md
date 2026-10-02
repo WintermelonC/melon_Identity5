@@ -257,7 +257,9 @@ Source/Identity5/Private/Logging/Identity5Log.cpp （同步删掉 4 个 DEFINE_L
 - **Meta 属性（Damage/Healing）不应复制**（它们只在服务器瞬间存在）——这是新手最常犯的带宽错误；
 - 插件的 `Binaries/`/`Intermediate/` 需要单独 ignore（工程根 `/Binaries/` 是锚定规则，不匹配子目录）。
 
-✅ **自测**：插件在插件面板显示"已启用"；编译通过；**用 Listen Server + 客户端验证属性在客户端也能读到 `100.0/100.0`**（这是本节最关键的一项，见详细文档的验证项 6）。
+✅ **自测**：插件在插件面板显示"已启用"；编译通过；**用 Listen Server + 4 个客户端验证属性在客户端也能读到 `100.0/100.0`**（这是本节最关键的一项，见详细文档的验证项 6）。
+
+> 📄 验证前需要一张地图：先按 **[steps/S05-verify-level.md](steps/S05-verify-level.md)** 建 `Content/IDF/Maps/L_MilitaryFactory`（Basic 模板 + 地面 + PlayerStart），再把 `AIDFGasTestActor` 拖进去跑 PIE。这张图**不是一次性的**——S15 的军工厂灰盒会在同一张图上继续做。
 
 💼 **简历点**："用 GameFeature 插件划分框架层（IDFCore）与启动装配（主模块），保证依赖单向；基于 GAS 实现自定义 AbilitySystemComponent 与 AttributeSet，区分持久属性与 Meta 属性以控制复制开销"。
 

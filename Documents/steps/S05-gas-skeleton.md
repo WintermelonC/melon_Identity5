@@ -847,17 +847,20 @@ void AIDFGasTestActor::BeginPlay()
 
 ## 6. 自测清单（本节 DoD）
 
+> 📄 **前置动作见 [S05-verify-level.md](S05-verify-level.md)**：PIE 需要一张地图，所以先建 `Content/IDF/Maps/L_MilitaryFactory`（Basic 模板 + 地面 + PlayerStart），再把 `AIDFGasTestActor` 拖进去。那张图**不是一次性的**——S15 会在同一张图上做军工厂灰盒。
+
 | # | 验证项 | 期望结果 |
 |---|---|---|
 | 0 | **插件已加载** | 编辑器 → 编辑 → 插件，搜 `IDF Core` 显示"已启用"；`Saved/Logs/Identity5.log` 里搜 `IDFCore` 能看到模块加载记录 |
+| 0b | **关卡可用** | `Content/IDF/Maps/L_MilitaryFactory` 能打开、有地面与光照；`Project Settings → Maps & Modes` 三个字段指向它 |
 | 1 | 编译通过 | 无 Error。**特别确认没有报 `PostGameplayEffectExecute` 未覆盖基类**（那就是签名写错了，漏了 `const`）；也没有 `unresolved external symbol`（那就是 `IDFCORE_API` 没改对） |
-| 2 | 类被反射注册 | 编辑器里 **Tools → New C++ Class** 的父类列表能搜到 `IDFHealthSet` / `IDFAbilitySystemComponent`；或把 `AIDFGasTestActor` 拖进关卡能正常生成。**注意**：这些类来自 `IDFCore` 模块，若搜不到说明插件没加载或 API 宏写错 |
+| 2 | 类被反射注册 | Content Browser 切到 **C++ Classes** 能看到 `IDFGasTestActor`，能拖进关卡并生成。**注意**：这些类来自 `IDFCore` 模块，若搜不到说明插件没加载、没编译成功或 API 宏写错 |
 | 3 | 属性集注册成功 | PIE 后 Output Log 里看到 `[GAS 测试] XXX 初始化完成（服务器=是），生命 100.0/100.0` |
-| 4 | 属性集列表非空 | 在测试 Actor 上调用 `PrintDebugInfo()`（可临时在 `BeginPlay` 末尾调用一次），日志里 `属性集[0] = IDFHealthSet` |
+| 4 | 属性集列表非空 | 在测试 Actor 的 `BeginPlay` 末尾临时调一次 `PrintDebugInfo()`，日志里 `属性集[0] = IDFHealthSet` |
 | 5 | 标签查询不崩 | 同上，`当前标签` 一行有输出（可能是空字符串，但不应崩溃） |
-| 6 | **客户端也能读到属性**（核心） | 用 **Play As Listen Server + 2 个客户端** 跑：在**客户端窗口**的日志里，`生命 100.0/100.0` 也能打印出来。如果客户端是 `0.0/0.0` → 说明复制配置有误，见下方排查表 |
+| 6 | **客户端也能读到属性**（核心） | 用 **Play As Listen Server + 4 个客户端** 跑：在**客户端窗口**的日志里，`生命 100.0/100.0` 也能打印出来，且 `服务器=否`。如果客户端是 `0.0/0.0` → 见 [S05-verify-level.md](S05-verify-level.md) 第 6.3 节的排查表 |
 | 7 | 修改属性会触发夹取 | 临时在服务器 `BeginPlay` 里调 `HealthSet->SetHealth(150.f)` → 日志里的生命应该是 **100.0**（被 `PreAttributeChange` 夹回 MaxHealth），不是 150 |
-| 8 | Meta 属性确实不复制 | 用 `net.PktLag` + 断点/日志确认 `Damage` 在客户端恒为 0。更简单的验证：检查 `GetLifetimeReplicatedProps` 里**没有** `Damage`（代码审查即可） |
+| 8 | Meta 属性确实不复制 | 代码审查：`GetLifetimeReplicatedProps` 里**没有** `Damage` / `Healing` |
 
 ### 验证项 6 失败时的排查顺序（这是本节最可能卡住的地方）
 
