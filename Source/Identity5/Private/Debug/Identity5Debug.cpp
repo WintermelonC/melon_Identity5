@@ -13,16 +13,18 @@
 // ─────────────────────────────────────────────────────────────
 TMap<uint64, double> FIDFDebug::LastPrintTimes;
 
-// ─────────────────────────────────────────────────────────────
-// 2) 调试总开关（CVar）
-//    TAutoConsoleVariable 是"带值的变量"：有默认值、可被 ini 覆盖、可在控制台改。
-//    ECVF_Cheat：标记为作弊类，Shipping 构建默认不可用（发布版不会留调试后门）。
-//    放在文件作用域 = 模块加载时自动注册，不需要手工注册代码。
-// ─────────────────────────────────────────────────────────────
+// 总开关：0 时所有屏幕调试输出静默
 static TAutoConsoleVariable<int32> CVarIDFDebugEnabled(
 	TEXT("IDF.Debug.Enabled"),
 	1,
 	TEXT("IDF 调试输出总开关：1 开启，0 关闭（关闭后所有屏幕调试输出静默）"),
+	ECVF_Cheat);
+
+// 持续可视化开关：只影响"每帧绘制"的调试叠加层，不影响一次性命令
+static TAutoConsoleVariable<int32> CVarIDFDrawDebugInfo(
+	TEXT("IDF.Debug.Draw"),
+	1,
+	TEXT("是否在屏幕上绘制 IDF 调试信息：1 开启，0 关闭"),
 	ECVF_Cheat);
 
 bool FIDFDebug::IsEnabled()
@@ -31,6 +33,11 @@ bool FIDFDebug::IsEnabled()
 	//  - 本项目所有调试输出都在游戏线程调用，用 GetValueOnGameThread() 语义更明确；
 	//  - 它的代价是会断言"必须在游戏线程"，能帮你提前发现跨线程误用。
 	return CVarIDFDebugEnabled.GetValueOnGameThread() != 0;
+}
+
+bool FIDFDebug::ShouldDrawDebugInfo()
+{
+	return CVarIDFDrawDebugInfo.GetValueOnGameThread() != 0;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -76,32 +83,6 @@ void FIDFDebug::Screen(uint64 Key, const FString& Message, float Duration,
 	//       bNewerOnTop    —— 【仅在 Key == INDEX_NONE 时生效】（引擎注释明确写了这一点）。
 	//                         我们始终传固定 Key，所以这个参数对我们没有实际作用，传默认值即可。
 	GEngine->AddOnScreenDebugMessage(Key, Duration, Color, Message);
-}
-
-// ─────────────────────────────────────────────────────────────
-// 4) ScreenAndLog()：屏幕 + 日志双通道
-//    ⚠️ 模板定义必须放在头文件才能被其他翻译单元使用；放在 .cpp 里只能本文件用。
-//       所以这里【不用模板】，而是用 UE_LOG 的格式化入口 + FString 拼接。
-// ─────────────────────────────────────────────────────────────
-void FIDFDebug::ScreenAndLog(const FLogCategoryBase& Category, FColor Color, uint64 Key,
-							 const FString& Message, float Duration, float ThrottleSeconds)
-{
-	// 屏幕部分
-	Screen(Key, Message, Duration, Color, ThrottleSeconds);
-
-	// 日志部分：UE_LOG 的第一个参数要求是"日志类别【变量名】"（宏内部用 #Category 取名字），
-	// 因此无法把 FLogCategoryBase& 这种变量传进去，只能走底层入口 FMsg::Logf。
-	//
-	// 已核实签名（Runtime/Core/Public/Logging/LogMacros.h:62）：
-	//   static void Logf(const ANSICHAR* File, int32 Line, const FLogCategoryName& Category,
-	//                    ELogVerbosity::Type Verbosity, const FmtType& Fmt, Types... Args)
-	// 两个要点：
-	//   1) File 形参是 ANSICHAR*，所以 __FILE__（窄字符）直接传，【不要】套 TEXT()；
-	//   2) Category 形参是 FLogCategoryName（UE5.8 中为 FLazyName 或 FName 的条件别名，
-	//      见 LogCategory.h:13/16），而 GetCategoryName() 返回的正是 FLogCategoryName&，
-	//      类型直接匹配，无需转换。
-	FMsg::Logf(__FILE__, __LINE__, Category.GetCategoryName(),
-			   ELogVerbosity::Log, TEXT("%s"), *Message);
 }
 
 // ─────────────────────────────────────────────────────────────

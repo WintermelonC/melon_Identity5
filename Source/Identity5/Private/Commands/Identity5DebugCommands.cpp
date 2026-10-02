@@ -21,54 +21,16 @@
 #include "HAL/IConsoleManager.h"
 
 // ═══════════════════════════════════════════════════════════════
-// 控制台变量（CVar）：有值、表示状态
-// ═══════════════════════════════════════════════════════════════
-
-// ① 用 FAutoConsoleVariableRef 把"一个已有变量"暴露成 CVar。
-//    适合：已经有一个 int32/bool/float 成员，想让它可被控制台修改。
-static int32 GIDFDrawDebugInfo = 0;
-static FAutoConsoleVariableRef CVarIDFDrawDebugInfo(
-	TEXT("IDF.Debug.Draw"),
-	GIDFDrawDebugInfo,
-	TEXT("是否在屏幕上绘制 IDF 调试信息：0 关闭，1 开启"),
-	ECVF_Cheat);
-
-// 供其它系统查询（后续 S11 可视化交互点、S13 显示破译进度都会用到）。
-// 放在头文件里声明、这里定义，避免各处直接访问 GIDFDrawDebugInfo。
-bool IDFDebug_ShouldDrawDebugInfo()
-{
-	return GIDFDrawDebugInfo != 0;
-}
-
-// ② 用 TAutoConsoleVariable 创建一个"自带存储"的 CVar。
-//    适合：值只被内部使用，不需要暴露成普通变量。
-//    读取方式与 ① 不同：要调用 GetValueOnGameThread()。
-static TAutoConsoleVariable<int32> CVarIDFDebugVerboseLog(
-	TEXT("IDF.Debug.VerboseLog"),
-	0,
-	TEXT("是否把 IDF 调试信息同时写入日志：0 关闭，1 开启"),
-	ECVF_Cheat);
-
-static bool IDFDebug_ShouldVerboseLog()
-{
-	return CVarIDFDebugVerboseLog.GetValueOnGameThread() != 0;
-}
-
-// ═══════════════════════════════════════════════════════════════
 // 控制台命令：一个动作
 // ═══════════════════════════════════════════════════════════════
 
 // ③ 最小验证命令：带参数
 static FAutoConsoleCommandWithWorldAndArgs CmdIDFDebugPrint(
 	TEXT("IDF.Debug.Print"),
-	TEXT("验证调试基础设施：在屏幕与日志中输出一条消息。用法：IDF.Debug.Print [文本...]"),
+	TEXT("在屏幕与日志中输出一条消息。用法：IDF.Debug.Print [文本...]"),
 	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda(
 		[](const TArray<FString>& Args, UWorld* World)
 		{
-			// ⚠️ 不要用 FString::Join —— 该 API 在 UE5.8 中【不存在】
-			//    （FString 所在的 Containers/UnrealString.h 里没有 Join，只有 FText::Join，
-			//      且 FText::Join 的参数顺序是 (Delimiter, Args)，很容易记错）。
-			//    这里用手写拼接，最直观也最稳。
 			FString Text;
 			for (int32 Index = 0; Index < Args.Num(); ++Index)
 			{
@@ -83,8 +45,8 @@ static FAutoConsoleCommandWithWorldAndArgs CmdIDFDebugPrint(
 				Text = TEXT("Hello, Identity5");
 			}
 			
-			UE_LOG(LogIdentity5, Log, TEXT("IDE.Debug.Print 被调用: %s"), *Text);
 			FIDFDebug::Screen(1, Text, 5.f, FColor::Cyan);
+			UE_LOG(LogIdentity5, Log, TEXT("IDF.Debug.Print 被调用: %s"), *Text);
 		}));
 		
 // ④ "转储世界状态"命令：需要遍历世界（S08 做阵营分配时的主力验证工具）
@@ -170,7 +132,6 @@ static FAutoConsoleCommand CmdIDFDebugStatus(
 		{
 			UE_LOG(LogIdentity5, Log, TEXT("=== IDF 调试开关 ==="));
 			UE_LOG(LogIdentity5, Log, TEXT("  IDF.Debug.Enabled    = %d"), FIDFDebug::IsEnabled() ? 1 : 0);
-			UE_LOG(LogIdentity5, Log, TEXT("  IDF.Debug.Draw       = %d"), GIDFDrawDebugInfo);
-			UE_LOG(LogIdentity5, Log, TEXT("  IDF.Debug.VerboseLog = %d"), IDFDebug_ShouldVerboseLog() ? 1 : 0);
+			UE_LOG(LogIdentity5, Log, TEXT("  IDF.Debug.Draw       = %d"), FIDFDebug::ShouldDrawDebugInfo() ? 1 : 0);
 			UE_LOG(LogIdentity5, Log, TEXT("  编译时间             = %s %s"), TEXT(__DATE__), TEXT(__TIME__));
 		}));

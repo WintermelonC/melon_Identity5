@@ -30,13 +30,6 @@ struct IDENTITY5_API FIDFDebug
 	static void Screen(uint64 Key, const FString& Message, float Duration = 0.f,
 					   const FColor& Color = FColor::White, float ThrottleSeconds = 0.f);
 	
-	/**
-	 * 同时输出到屏幕与日志（排查"看不到"问题时最省事的一种）。
-	 * @param Category  日志类别，例如 LogIDFInteraction
-	 */
-	static void ScreenAndLog(const FLogCategoryBase& Category, FColor Color, uint64 Key,
-							 const FString& Message, float Duration = 0.f, float ThrottleSeconds = 0.f);
-	
 	/** 清空所有屏幕调试消息（等价于 GEngine->ClearOnScreenDebugMessages()） */
 	static void ClearScreen();
 	
@@ -49,11 +42,12 @@ struct IDENTITY5_API FIDFDebug
 	/** 调试总开关：由 CVar "IDF.Debug.Enabled" 控制 */
 	static bool IsEnabled();
 	
-	/**
-	 * 把 ENetMode 转成可读字符串。
-	 * ⚠️ 必须手写：ENetMode 是【裸枚举】（EngineBaseTypes.h:978 的 `enum ENetMode : int`），
-	 *    没有 UENUM 标记，因此 UEnum::GetValueAsString(World->GetNetMode()) 编译不过。
-	 */
+	/** 是否绘制持续调试信息：由 CVar "IDF.Debug.Draw" 控制。
+	 *  供 S11（交互点可视化）/ S13（破译进度）等"每帧绘制"的系统查询。
+	 *  注意：一次性命令（如 IDF.Debug.Print）不应检查它——见 S04 文档的设计说明。 */
+	static bool ShouldDrawDebugInfo();
+	
+	/** 把 ENetMode 转成可读字符串 */
 	static const TCHAR* NetModeToString(ENetMode NetMode);
 	
 	/** 取当前网络模式的可读字符串（内部调用 World->GetNetMode()） */
