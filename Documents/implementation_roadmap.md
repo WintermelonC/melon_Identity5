@@ -122,6 +122,8 @@
 
 ### S03 ✅ 项目配置：默认地图 / GameMode / 网络参数
 
+> 📄 **详细实施步骤见 [steps/S03-project-config.md](steps/S03-project-config.md)**（含 ini 分层机制讲解、两层 GameMode 设计原因、逐项自测与常见坑）。
+
 🎯 **目标**：编辑器启动就有正确的默认地图与 GameMode 骨架，网络参数就位。
 
 📚 **要学会的概念**：
