@@ -59,9 +59,9 @@ static bool IDFDebug_ShouldVerboseLog()
 // ═══════════════════════════════════════════════════════════════
 
 // ③ 最小验证命令：带参数
-static FAutoConsoleCommandWithWorldAndArgs CmdIDFDebugHello(
-	TEXT("IDF.Debug.Hello"),
-	TEXT("验证调试基础设施：在屏幕与日志中输出一条消息。用法：IDF.Debug.Hello [文本...]"),
+static FAutoConsoleCommandWithWorldAndArgs CmdIDFDebugPrint(
+	TEXT("IDF.Debug.Print"),
+	TEXT("验证调试基础设施：在屏幕与日志中输出一条消息。用法：IDF.Debug.Print [文本...]"),
 	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda(
 		[](const TArray<FString>& Args, UWorld* World)
 		{
@@ -83,7 +83,7 @@ static FAutoConsoleCommandWithWorldAndArgs CmdIDFDebugHello(
 				Text = TEXT("Hello, Identity5");
 			}
 			
-			UE_LOG(LogIdentity5, Log, TEXT("IDE.Debug.Hello 被调用: %s"), *Text);
+			UE_LOG(LogIdentity5, Log, TEXT("IDE.Debug.Print 被调用: %s"), *Text);
 			FIDFDebug::Screen(1, Text, 5.f, FColor::Cyan);
 		}));
 		
