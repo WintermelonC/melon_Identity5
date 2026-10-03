@@ -1,5 +1,5 @@
-#include "AbilitySystem/IDFAbilitySystemComponent.h"
-#include "AbilitySystem/IDFHealthSet.h"
+#include "AbilitySystemComponents//IDFAbilitySystemComponent.h"
+#include "AttributeSets/IDFHealthSet.h"
 #include "Logging/IDFCoreLog.h"
 
 UIDFAbilitySystemComponent::UIDFAbilitySystemComponent()

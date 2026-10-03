@@ -1,6 +1,6 @@
 #include "Debug/IDFGasTestActor.h"
-#include "AbilitySystem/IDFAbilitySystemComponent.h"
-#include "AbilitySystem/IDFHealthSet.h"
+#include "AbilitySystemComponents/IDFAbilitySystemComponent.h"
+#include "AttributeSets/IDFHealthSet.h"
 #include "Logging/IDFCoreLog.h"
 
 AIDFGasTestActor::AIDFGasTestActor()
@@ -33,7 +33,7 @@ void AIDFGasTestActor::BeginPlay()
 		//   注意：如果构造函数里已经 CreateDefaultSubobject 了 HealthSet，
 		//   这里不要再用 AddSet（会创建第二个实例），改用下面的方式 B。
 		// 方式 B：AddAttributeSetSubobject(已有实例)
-		AbilitySystemComponent->AddAttributeSetSubobject(HealthSet);
+		AbilitySystemComponent->AddAttributeSetSubobject(HealthSet.Get());
 
 		UE_LOG(LogIDFAbility, Log, TEXT("[GAS 测试] %s 初始化完成（服务器=%s），生命 %.1f/%.1f"),
 			*GetName(),

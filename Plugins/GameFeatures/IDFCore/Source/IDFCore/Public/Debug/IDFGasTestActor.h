@@ -31,5 +31,5 @@ protected:
 	TObjectPtr<UIDFAbilitySystemComponent> AbilitySystemComponent;
 
 	UPROPERTY()
-	UIDFHealthSet* HealthSet;
+	TObjectPtr<UIDFHealthSet> HealthSet;
 };

@@ -267,6 +267,10 @@ Source/Identity5/Private/Logging/Identity5Log.cpp （同步删掉 4 个 DEFINE_L
 
 ### S06 ✅ 数据资产：AbilitySet + InputConfig + 模块内 Tag 注册
 
+> 📄 **详细实施步骤见 [steps/S06-ability-set-input-config.md](steps/S06-ability-set-input-config.md)**（含：原生标签的"头声明/源定义"分工与宏内 `static_assert` 拦截、AbilitySet 装配顺序为何不能颠倒（属性集→GE→能力）、`FGameplayAbilitySpec` 的 `InputID` 已在 5.5 废弃改用标签、平行数组的结构性隐患与 USTRUCT 替代方案、`UPrimaryDataAsset` vs `UDataAsset` 的取舍）。
+>
+> ⚠️ **本节需要先改 `IDFCore.Build.cs`**：把 **`EnhancedInput`** 加进 `PublicDependencyModuleNames`（`UIDFInputConfig` 要用 `UInputMappingContext` / `UInputAction`）。
+
 🎯 **目标**：有一份"角色能力装配表"（`UIDFAbilitySet`）和"输入映射表"（`UIDFInputConfig`），以及 C++ 原生的 GameplayTag。
 
 📚 **要学会的概念**：
