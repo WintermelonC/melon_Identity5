@@ -29,7 +29,9 @@ public class IDFCore : ModuleRules
 				"GameplayAbilities",
 				"GameplayTags",
 				"GameplayTasks",
-				"EnhancedInput"
+				"EnhancedInput",
+				"ModularGameplay",
+				"DeveloperSettings"
 			}
 			);
 			

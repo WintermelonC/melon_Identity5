@@ -38,4 +38,9 @@ namespace IDFTags
 
 	// ── 冷却 ──
 	UE_DEFINE_GAMEPLAY_TAG(Cooldown_Test,      "Cooldown.Test");
+	
+	UE_DEFINE_GAMEPLAY_TAG(InitState_Spawned,          "InitState.Spawned");
+	UE_DEFINE_GAMEPLAY_TAG(InitState_DataAvailable,    "InitState.DataAvailable");
+	UE_DEFINE_GAMEPLAY_TAG(InitState_DataInitialized,  "InitState.DataInitialized");
+	UE_DEFINE_GAMEPLAY_TAG(InitState_GameplayReady,    "InitState.GameplayReady");
 }

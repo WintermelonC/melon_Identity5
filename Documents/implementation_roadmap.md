@@ -306,6 +306,12 @@ Config/DefaultGameplayTags.ini                        （仅用于编辑器可�
 
 ### S07 ✅ 角色基类：ASC 初始化与网络双端时序
 
+> 📄 **详细实施步骤见 [steps/S07-character-base.md](steps/S07-character-base.md)**（含：双端两条路径为何必须收敛到同一幂等函数、初始化内部六步顺序各自颠倒的后果、`NetUpdateFrequency` 在 5.5 已废弃改用 Setter、`Abstract` 角色类不能直接做 `DefaultPawnClass` 的解决办法、客户端初始化失败的排查表）。
+>
+> ⚠️ **两处设计文档假设需要修正（我核实过引擎源码）**：
+> 1. **`UGameplayMessageSubsystem` 不在引擎里**——它是 Lyra 样例工程自带的。本节先改用 `BlueprintAssignable` 委托，等 S13 真有"跨系统按标签广播"的需求时再自研。
+> 2. **`InitState.Spawned` / `DataInitialized` / `GameplayReady` 这套标签引擎也不提供**——`UGameFrameworkComponentManager::RegisterInitState()` 只维护顺序数组，标签名是使用方的约定。**标签由我们自己在 `IDFGameplayTags.h` 里定义**（沿用 Lyra 命名便于对照资料）。
+
 🎯 **目标**：`AIDFCharacterBase` 在服务器和客户端都能正确初始化 ASC，两个端都能读到 `State.Ready` 标签。
 
 📚 **要学会的概念**（**这一步的核心，务必搞懂**）：

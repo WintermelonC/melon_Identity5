@@ -63,4 +63,10 @@ namespace IDFTags
 	// 冷却阻断（Cooldown.*）
 	// ═══════════════════════════════════════════════════
 	IDFCORE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Cooldown_Test);
+	
+	// 初始化状态标签（对应 UGameFrameworkComponentManager 的状态链）
+	IDFCORE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InitState_Spawned);
+	IDFCORE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InitState_DataAvailable);
+	IDFCORE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InitState_DataInitialized);
+	IDFCORE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InitState_GameplayReady);
 }

@@ -99,7 +99,9 @@
 | ADR-5 | **所有时间/速率以服务器时间（`AGameStateBase::GetServerWorldTimeSeconds`）为准** | 客户端本地时间 | 破译进度、椅子计时、大门进度必须 5 端一致，避免作弊与漂移 |
 | ADR-6 | **数值全部外置为 DataAsset/DataTable**，C++ 只写逻辑 | 蓝图里散落数值 | 便于批量调平衡、便于做"数值对照表"、便于单元测试 |
 | ADR-7 | **进度类状态用"离散增量复制"（每 0.1s 或 1% 一次）而非每帧属性复制** | 每帧 `ReplicatedFloat` | GAS 属性复制有开销；破译进度不要求逐帧精度，用 0.5% 粒度即可，物理带宽降低约 20 倍 |
-| ADR-8 | **GameplayMessageSubsystem 解耦系统通信**（自研轻量版，`UGameplayMessageSubsystem`） | 直接 Cast 引用各系统 | 破译完成/挂椅/开门等事件广播给 UI、音频、AI，避免系统间硬引用成网 |
+| ADR-8 | **GameplayMessageSubsystem 解耦系统通信**（自研轻量版，`UIDFGameplayMessageSubsystem`） | 直接 Cast 引用各系统 | 破译完成/挂椅/开门等事件广播给 UI、音频、AI，避免系统间硬引用成网 |
+
+> 📌 **实施期核实（S07）**：`UGameplayMessageSubsystem` **不在引擎里**——它是 Lyra 样例工程自带的类（在 Lyra 的 `GameplayMessageRuntime` 插件里）。本项目需**自研**（接口设计见 `steps/S07-character-base.md` 第 11 节），且在 S13 出现真实需求之前不实现；S07 先用 `BlueprintAssignable` 委托替代。
 
 ---
 
@@ -641,6 +643,8 @@ StateTree_ST_Machine:
 ```
 
 **装配点（Extension Point）**：用 `UGameFrameworkComponentManager::AddGameFrameworkComponentReceiver` + `IGameFrameworkInitStateInterface`（`InitState.Spawned / DataAvailable / DataInitialized / GameplayReady`）在角色生成后异步注入：AbilitySet、InputConfig、UI Widget、相机配置、初始 GE。这样"角色 Feature 插件"不需要改主 GameMode 代码。
+
+> 📌 **实施期核实（S07）**：这套 `InitState.*` 标签**引擎不提供**。`UGameFrameworkComponentManager::RegisterInitState()` 只是往一个 `InitStateOrder` 数组里注册顺序，**标签名是使用方的约定**（Lyra 自己定义）。本项目在 `IDFGameplayTags.h` 里自行定义这 4 个标签，并在初始化时按顺序注册（详见 `steps/S07-character-base.md` 第 0.2 节）。
 
 ---
 
@@ -1229,7 +1233,7 @@ Documents/
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "AbilitySystemInterface.h"
-#include "GameFramework/GameplayMessageSubsystem.h"   // 若采用引擎自带子系统
+#include "Components/GameFrameworkInitStateInterface.h"   // ModularGameplay 插件（注意含 Components/ 子目录）
 #include "IDFCharacterBase.generated.h"
 
 class UIDFAbilitySystemComponent;

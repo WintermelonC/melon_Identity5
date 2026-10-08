@@ -47,6 +47,12 @@ void UIDFAbilitySet::GiveToAbilitySystem(UAbilitySystemComponent* ASC,
 		}
 	}
 	
+	if (!ASC->IsOwnerActorAuthoritative())
+	{
+		UE_LOG(LogIDFAbility, Verbose, TEXT("GiveToAbilitySystem：非权威端（客户端），跳过能力授予，等待服务器复制"));
+		return;
+	}
+	
 	// ── 第 3 步：授予能力（放最后，因为能力的激活条件可能依赖属性/标签已就绪）──
 	for (const FIDFAbilitySet_Ability& AbilityToGrant : GrantedAbilities)
 	{
