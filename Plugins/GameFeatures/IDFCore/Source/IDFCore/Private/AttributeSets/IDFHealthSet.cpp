@@ -3,7 +3,7 @@
 #include "GameplayEffectExtension.h"
 #include "GameFramework/Character.h"
 #include "Net/UnrealNetwork.h"
-#include "Logging/IDFCoreLog.h"
+#include "IDFLog/IDFCoreLog.h"
 
 UIDFHealthSet::UIDFHealthSet()
 {

@@ -11,9 +11,8 @@
 //     再试一次即可（这一步能帮你确认问题是否出在 Flags 上）。
 
 #include "CoreMinimal.h"
-#include "Logging/Identity5Log.h"
-#include "Debug/Identity5Debug.h"
-#include "Engine/Engine.h"
+#include "IDFLog/Identity5Log.h"
+#include "IDFDebug/Identity5Debug.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Pawn.h"

@@ -1,4 +1,4 @@
-﻿#include "GameMode/Identity5GameMode.h"
+﻿#include "Identity5GameMode.h"
 
 AIdentity5GameMode::AIdentity5GameMode()
 {

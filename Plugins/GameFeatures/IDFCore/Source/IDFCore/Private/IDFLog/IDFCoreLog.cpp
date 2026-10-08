@@ -1,4 +1,4 @@
-﻿#include "Logging/IDFCoreLog.h"
+﻿#include "IDFLog/IDFCoreLog.h"
 
 DEFINE_LOG_CATEGORY(LogIDFNet);
 DEFINE_LOG_CATEGORY(LogIDFAbility);

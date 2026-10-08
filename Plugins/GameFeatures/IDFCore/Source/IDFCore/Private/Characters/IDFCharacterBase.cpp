@@ -3,7 +3,7 @@
 #include "Components/GameFrameworkComponentManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameplayTags/IDFGameplayTags.h"
-#include "Logging/IDFCoreLog.h"
+#include "IDFLog/IDFCoreLog.h"
 #include "AbilitySets/IDFAbilitySet.h"
 #include "AttributeSets/IDFHealthSet.h"
 #include "Net/UnrealNetwork.h"

@@ -1,5 +1,5 @@
 ﻿#include "AbilitySets/IDFAbilitySet.h"
-#include "Logging/IDFCoreLog.h"
+#include "IDFLog/IDFCoreLog.h"
 #include "AbilitySystemComponent.h"
 
 void UIDFAbilitySet::GiveToAbilitySystem(UAbilitySystemComponent* ASC,

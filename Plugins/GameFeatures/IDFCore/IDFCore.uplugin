@@ -27,6 +27,7 @@
 	"Plugins": [
 		{ "Name": "GameplayAbilities", "Enabled": true },
 		{ "Name": "GameFeatures", "Enabled": true },
-		{ "Name": "ModularGameplay", "Enabled": true }
+		{ "Name": "ModularGameplay", "Enabled": true },
+		{ "Name": "EnhancedInput", "Enabled": true }
 	]
 }
