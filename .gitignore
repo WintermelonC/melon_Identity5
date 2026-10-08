@@ -26,8 +26,7 @@
 .vsconfig
 
 # ── 3. 第三方/预编译插件的二进制（RiderLink 会随引擎重新编译）──
-/Plugins/Developer/RiderLink/Binaries/
-/Plugins/Developer/RiderLink/Intermediate/
+/Plugins/Developer/RiderLink/
 /Plugins/GameFeatures/*/Binaries/
 /Plugins/GameFeatures/*/Intermediate/
 
